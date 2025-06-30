@@ -1,1 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MbareteFit - Firebase Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8fafc; color: #222; }
+    .container { max-width: 400px; margin: 2rem auto; background: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 12px #0001; }
+    input, button { width: 100%; margin: 0.5rem 0; padding: 0.5rem; }
+    #logout { margin-top: 1rem; }
+    #chartContainer { margin: 2rem auto; max-width: 600px; }
+    .error { color: #e11d48; }
+    .or-separator { text-align:center; color:#aaa; margin:10px 0;}
+    .google-btn {
+      background: #4285F4; color: #fff; border: none; border-radius: 4px;
+      padding: 0.5em 1em; font-size: 1em; cursor: pointer; width: 100%;
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px;
+    }
+    .google-btn svg { vertical-align: middle; width: 18px; height: 18px; }
+  </style>
+</head>
+<body>
+<div class="container" id="auth-container">
+  <h2>Sign Up / Login</h2>
+  <input type="email" id="email" placeholder="Email" autocomplete="username">
+  <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+  <button id="loginBtn">Login / Sign Up</button>
+  
+  <div class="or-separator">or</div>
+  <button id="googleLoginBtn" type="button" class="google-btn">
+    <svg viewBox="0 0 48 48"><g><path fill="#4285F4" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.5 4-5.2 7-9.3 7-5.5 0-10-4.5-10-10s4.5-10 10-10c2.4 0 4.6.8 6.4 2.3l6-6C36.1 8.1 30.4 6 24 6 12.9 6 4 14.9 4 26s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-4z"/><path fill="#34A853" d="M6.3 14.1l6.6 4.9C15.2 15.8 19.2 14 24 14c2.4 0 4.6.8 6.4 2.3l6-6C36.1 8.1 30.4 6 24 6 15.6 6 8.4 10.6 6.3 14.1z"/><path fill="#FBBC05" d="M24 44c6.4 0 12.1-2.1 16.6-5.8l-7.6-6.2c-2.2 1.5-4.9 2.4-7.9 2.4-4.1 0-7.8-3-9.3-7H6.3C8.4 41.4 15.6 46 24 46z"/><path fill="#EA4335" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.1 2.9-3.6 5.2-6.6 6.2v5h10.7C43.8 36.5 44 31.4 44 26c0-1.3-.1-2.7-.4-4z"/></g></svg>
+    Sign in with Google
+  </button>
+  <p id="auth-msg" class="error"></p>
+</div>
 
+<div class="container" id="app-container" style="display:none;">
+  <h2>MbareteFit</h2>
+  <div>
+    <label>Weight (kg): <input type="number" id="weight-input" min="1" step="0.1"></label>
+    <button id="log-weight-btn">Log Weight</button>
+  </div>
+  <div>
+    <h3>History</h3>
+    <ul id="history"></ul>
+  </div>
+  <button id="logout">Logout</button>
+</div>
+
+<div id="chartContainer" style="display:none;">
+  <canvas id="weightChart"></canvas>
+</div>
+
+<!-- Firebase via ES Module -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+
+  // Your Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCzzeNhnhMx4Hf5hJW_vz2V_jgindTysvs",
+    authDomain: "mbaretefit-b6c57.firebaseapp.com",
+    projectId: "mbaretefit-b6c57",
+    storageBucket: "mbaretefit-b6c57.appspot.com",
+    messagingSenderId: "33965493200",
+    appId: "1:33965493200:web:07a9531bf2382755e007d5",
+    measurementId: "G-W8JBF51MCE"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // UI Elements
+  const authContainer = document.getElementById('auth-container');
+  const appContainer = document.getElementById('app-container');
+  const chartContainer = document.getElementById('chartContainer');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const loginBtn = document.getElementById('loginBtn');
+  const googleLoginBtn = document.getElementById('googleLoginBtn');
+  const authMsg = document.getElementById('auth-msg');
+  const logoutBtn = document.getElementById('logout');
+  const weightInput = document.getElementById('weight-input');
+  const logWeightBtn = document.getElementById('log-weight-btn');
+  const historyEl = document.getElementById('history');
+  const weightChartCanvas = document.getElementById('weightChart');
+  let weightChart = null;
+
+  // App State
+  let userId = null;
+  let userWeights = [];
+
+  // Show/hide app sections
+  function showApp(loggedIn) {
+    authContainer.style.display = loggedIn ? 'none' : '';
+    appContainer.style.display = loggedIn ? '' : 'none';
+    chartContainer.style.display = loggedIn ? '' : 'none';
+  }
+
+  // Render weight history
+  function renderHistory() {
+    historyEl.innerHTML = '';
+    userWeights.slice().reverse().forEach(entry => {
+      const li = document.createElement('li');
+      li.textContent = `${entry.date}: ${entry.weight} kg`;
+      historyEl.appendChild(li);
+    });
+  }
+
+  // Render Chart.js chart
+  function renderChart() {
+    const labels = userWeights.map(e => e.date);
+    const data = userWeights.map(e => e.weight);
+
+    if (weightChart) weightChart.destroy();
+    weightChart = new Chart(weightChartCanvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: "Weight (kg)",
+          data,
+          borderColor: "#3b82f6",
+          backgroundColor: "rgba(59,130,246,0.1)",
+          fill: true,
+          tension: 0.2,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { title: { display: true, text: "Date" } },
+          y: { title: { display: true, text: "Weight (kg)" } }
+        }
+      }
+    });
+  }
+
+  // Handle weight log
+  logWeightBtn.onclick = async () => {
+    const weight = parseFloat(weightInput.value);
+    if (!weight || weight <= 0) return alert("Enter a valid weight.");
+    const date = new Date().toISOString().slice(0,10);
+    const newEntry = { date, weight };
+    await push(ref(db, 'users/' + userId + '/weights'), newEntry);
+    weightInput.value = '';
+  };
+
+  // Listen for weight changes
+  function listenForWeights() {
+    onValue(ref(db, 'users/' + userId + '/weights'), snapshot => {
+      const data = snapshot.val() || {};
+      userWeights = Object.values(data).sort((a, b) => a.date.localeCompare(b.date));
+      renderHistory();
+      renderChart();
+    });
+  }
+
+  // Email/Password Auth handler
+  loginBtn.onclick = async () => {
+    const email = emailInput.value;
+    const pass = passwordInput.value;
+    authMsg.textContent = '';
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) {
+      if (e.code === 'auth/user-not-found') {
+        try {
+          await createUserWithEmailAndPassword(auth, email, pass);
+        } catch (err) {
+          authMsg.textContent = err.message;
+        }
+      } else {
+        authMsg.textContent = e.message;
+      }
+    }
+  };
+
+  // Google Auth handler
+  const provider = new GoogleAuthProvider();
+  googleLoginBtn.onclick = async () => {
+    authMsg.textContent = '';
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      authMsg.textContent = e.message;
+    }
+  };
+
+  logoutBtn.onclick = () => signOut(auth);
+
+  // Auth state listener
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      userId = user.uid;
+      showApp(true);
+      listenForWeights();
+    } else {
+      showApp(false);
+      if (weightChart) weightChart.destroy();
+    }
+  });
+</script>
+</body>
+</html>
