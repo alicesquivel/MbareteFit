@@ -40,7 +40,6 @@ const KG_TO_LBS = 2.20462;
 
 const convertToKg = (val, units) => (units === 'lbs' ? val / KG_TO_LBS : val);
 const convertFromKg = (val, units) => (units === 'lbs' ? val * KG_TO_LBS : val);
-// **BUG FIX:** This function now safely handles null or undefined values.
 const formatWeight = (val, units) => (val !== null && val !== undefined) ? `${convertFromKg(val, units).toFixed(1)} ${units}` : '--';
 
 const calculateBMI = (weightKg, heightM) => (heightM > 0 && weightKg > 0 ? (weightKg / (heightM * heightM)).toFixed(1) : '--');
@@ -225,6 +224,10 @@ export default function App() {
         if (sortedWeightData.length === 0) return {};
         const firstEntry = sortedWeightData[0];
         const latestEntry = sortedWeightData[sortedWeightData.length - 1];
+        
+        // **BUG FIX:** Ensure latestEntry exists before trying to access its properties
+        if (!latestEntry) return {};
+
         const change = latestEntry.weight - firstEntry.weight;
         const bmi = calculateBMI(latestEntry.weight, height);
         
