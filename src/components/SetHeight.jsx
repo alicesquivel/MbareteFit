@@ -10,18 +10,24 @@ const SetHeight = () => {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    // Listen for Firebase Auth state changes
     const unsub = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
       if (currentUser) {
+        setUser(currentUser);
+        // Load height from database
         const heightRef = ref(db, `users/${currentUser.uid}/profile/height`);
         get(heightRef).then((snapshot) => {
           if (snapshot.exists()) {
             setHeightState(snapshot.val());
           }
+          setAuthLoading(false);
         });
       } else {
-        signInAnonymously(auth);
+        // Try to sign in anonymously if not signed in
+        signInAnonymously(auth).catch(() => {
+          setStatus("Could not sign in anonymously.");
+          setAuthLoading(false);
+        });
       }
     });
     return () => unsub();
@@ -43,6 +49,10 @@ const SetHeight = () => {
     setStatus("Height saved!");
   };
 
+  if (authLoading) {
+    return <div style={{ margin: "2rem 0", color: "#6b7280" }}>Loading authentication…</div>;
+  }
+
   return (
     <form onSubmit={handleSubmit} style={{ margin: "2rem 0" }}>
       <label>
@@ -52,14 +62,11 @@ const SetHeight = () => {
           step="0.01"
           value={height}
           onChange={(e) => setHeightState(e.target.value)}
-          disabled={authLoading || !user}
         />
       </label>
-      <button type="submit" style={{ marginLeft: 8 }} disabled={authLoading || !user}>
-        Save Height
-      </button>
+      <button type="submit" style={{ marginLeft: 8 }}>Save Height</button>
       <div style={{ marginTop: 8, color: user ? "green" : "red" }}>
-        {authLoading ? "Loading user..." : status}
+        {status}
       </div>
     </form>
   );
