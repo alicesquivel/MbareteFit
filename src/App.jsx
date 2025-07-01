@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously, signInWithCustomToken } from "firebase/auth";
 import { getFirestore, doc, onSnapshot, setDoc } from "firebase/firestore";
+import { firebaseConfig } from './firebase-config';
 
 // Chart.js Imports
 import {
@@ -41,21 +42,17 @@ const KG_TO_LBS = 2.20462;
 const convertToKg = (val, units) => (units === 'lbs' ? val / KG_TO_LBS : val);
 const convertFromKg = (val, units) => (units === 'lbs' ? val * KG_TO_LBS : val);
 
-// FIX: Safely format weight
-const formatWeight = (val, units) => (
+const formatWeight = (val, units) =>
   typeof val === "number" && !isNaN(val)
     ? `${convertFromKg(val, units).toFixed(1)} ${units}`
-    : "--"
-);
+    : "--";
 
-// FIX: Safely calculate BMI
 const calculateBMI = (weightKg, heightM) =>
   (typeof weightKg === "number" && typeof heightM === "number" && weightKg > 0 && heightM > 0)
     ? (weightKg / (heightM * heightM)).toFixed(1)
     : '--';
 
 const getBmiColor = (bmi) => {
-  // bmi might be a string if '--'
   if (typeof bmi !== "number") return 'text-slate-900';
   if (bmi < 18.5) return 'text-blue-500';
   if (bmi < 25) return 'text-green-500';
@@ -126,12 +123,6 @@ export default function App() {
 
   // --- Firebase Initialization and Data Sync ---
   useEffect(() => {
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-    if (!firebaseConfig) {
-      console.error("Firebase config not found.");
-      return;
-    }
-
     const app = initializeApp(firebaseConfig);
     const firestoreDb = getFirestore(app);
     const firestoreAuth = getAuth(app);
