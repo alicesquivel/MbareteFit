@@ -21,18 +21,28 @@ body {
     width: 100%;
     margin-bottom: 2.5rem;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .dashboard-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-.dashboard-logo {
-    font-size: 2rem;
+.logo {
+    font-size: 2.2rem;
     margin-right: 0.5rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    flex: 1;
 }
 
 .logout-btn {
@@ -51,8 +61,13 @@ body {
     background: #e0e7ef;
 }
 
+.divider {
+    border-top: 1px solid #e5e7eb;
+    margin: 0.5rem 0;
+}
+
 form {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
 }
 
 input[type="number"],
