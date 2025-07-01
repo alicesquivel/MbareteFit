@@ -50,7 +50,11 @@ const SetHeight = () => {
   };
 
   if (authLoading) {
-    return <div style={{ margin: "2rem 0", color: "#6b7280" }}>Loading authentication…</div>;
+    return (
+      <div style={{ margin: "2rem 0", color: "#6b7280" }}>
+        Loading authentication…
+      </div>
+    );
   }
 
   return (
@@ -58,13 +62,17 @@ const SetHeight = () => {
       <label>
         Set your height (in meters):&nbsp;
         <input
+          id="height"
+          name="height"
           type="number"
           step="0.01"
           value={height}
           onChange={(e) => setHeightState(e.target.value)}
         />
       </label>
-      <button type="submit" style={{ marginLeft: 8 }}>Save Height</button>
+      <button type="submit" style={{ marginLeft: 8 }}>
+        Save Height
+      </button>
       <div style={{ marginTop: 8, color: user ? "green" : "red" }}>
         {status}
       </div>
