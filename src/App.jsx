@@ -225,7 +225,6 @@ export default function App() {
         const firstEntry = sortedWeightData[0];
         const latestEntry = sortedWeightData[sortedWeightData.length - 1];
         
-        // **BUG FIX:** Ensure latestEntry exists before trying to access its properties
         if (!latestEntry) return {};
 
         const change = latestEntry.weight - firstEntry.weight;
@@ -364,8 +363,18 @@ export default function App() {
 
     const chartOptions = useMemo(() => ({
         responsive: true, maintainAspectRatio: false,
-        scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM d, hh:mm a' } }, y: { ticks: { callback: value => `${value.toFixed(1)} ${units}` } } },
-        plugins: { tooltip: { callbacks: { label: context => `Weight: ${context.parsed.y.toFixed(1)} ${units}`, afterBody: (items) => sortedWeightData.find(d => new Date(d.date).getTime() === items[0].parsed.x)?.note || '' } } }
+        scales: { 
+            x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM d, hh:mm a' } }, 
+            y: { ticks: { callback: value => (typeof value === 'number' ? `${value.toFixed(1)} ${units}`: value) } } 
+        },
+        plugins: { 
+            tooltip: { 
+                callbacks: { 
+                    label: context => (typeof context.parsed?.y === 'number' ? `Weight: ${context.parsed.y.toFixed(1)} ${units}` : ''),
+                    afterBody: (items) => sortedWeightData.find(d => new Date(d.date).getTime() === items[0].parsed.x)?.note || '' 
+                } 
+            } 
+        }
     }), [units, sortedWeightData]);
 
 
