@@ -1,35 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import WeightForm from "../components/WeightForm";
+import WeightHistory from "../components/WeightHistory";
+import WeightChart from "../components/WeightChart";
 import { auth } from "../utils/firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import SetHeight from "../components/SetHeight";
-import Login from "../components/Login";
+import { signOut } from "firebase/auth";
 
-const Dashboard = () => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, setUser);
-    return () => unsub();
-  }, []);
-
-  return (
-    <div className="dashboard-container">
-      <header>
-        <h1>MbareteFit</h1>
-        <p>Your comprehensive tool for tracking weight, BMI, and progress.</p>
-        {user && (
-          <button onClick={() => signOut(auth)} style={{ float: "right" }}>Sign Out</button>
-        )}
-      </header>
-      <main>
-        {!user ? (
-          <Login />
-        ) : (
-          <SetHeight />
-        )}
-      </main>
+const Dashboard = ({ user, weights }) => (
+  <div className="dashboard-outer">
+    <div className="dashboard-card">
+      <div className="dashboard-header">
+        <h1>
+          <span role="img" aria-label="dumbbell" className="dashboard-logo">🏋️‍♂️</span>
+          MbareteFit
+        </h1>
+        <button className="logout-btn" onClick={() => signOut(auth)}>
+          Logout
+        </button>
+      </div>
+      <WeightForm />
+      <WeightHistory weights={weights} />
     </div>
-  );
-};
+    <div className="dashboard-chart-card">
+      <WeightChart weights={weights} />
+    </div>
+  </div>
+);
 
 export default Dashboard;
