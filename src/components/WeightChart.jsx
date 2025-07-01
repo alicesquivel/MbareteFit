@@ -8,6 +8,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler, // 1. Import Filler
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { format } from "date-fns";
@@ -19,25 +20,27 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler // 2. Register Filler
 );
 
 const WeightChart = ({ weights = [] }) => {
-  const sortedWeights = [...weights].sort((a, b) => 
-    new Date(a.date) - new Date(b.date)
+  const sortedWeights = [...weights].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
   );
 
   const data = {
-    labels: sortedWeights.map(w => format(new Date(w.date), "MMM d")),
+    labels: sortedWeights.map((w) => format(new Date(w.date), "MMM d")),
     datasets: [
       {
         label: "Weight (kg)",
-        data: sortedWeights.map(w => w.weight),
+        data: sortedWeights.map((w) => w.weight),
         borderColor: "rgb(59, 130, 246)",
         backgroundColor: "rgba(59, 130, 246, 0.5)",
         tension: 0.4,
         pointRadius: 4,
         pointHoverRadius: 6,
+        fill: true, // Explicitly tell it to fill
       },
     ],
   };
