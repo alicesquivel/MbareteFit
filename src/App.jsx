@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
-// Import the new components you will create
+// Import your components
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
+
+// Import main styles
+import "./index.css";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const auth = getAuth();
 
+  // Listen for authentication state changes
   useEffect(() => {
-    // Listen for authentication state changes
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
