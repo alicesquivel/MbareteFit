@@ -1,53 +1,28 @@
-import React, { useState } from "react";
-import { auth } from "../utils/firebase";
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
+import React from "react";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
-const Login = ({ onLogin }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+const Login = () => {
+  const auth = getAuth();
 
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider(); // Create a new Google Auth provider
     try {
-      await signInWithPopup(auth, provider);
-      onLogin && onLogin();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+      // Trigger the Google Sign-In popup
+      const result = await signInWithPopup(auth, provider);
 
-  const handleEmailLogin = async (e) => {
-    e.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      onLogin && onLogin();
-    } catch (err) {
-      setError(err.message);
+      // The signed-in user info can be accessed via result.user
+      const user = result.user;
+      console.log("Signed in as:", user.displayName);
+    } catch (error) {
+      // Handle Errors here.
+      console.error("Error during sign-in:", error.message);
     }
   };
 
   return (
     <div>
-      <button onClick={handleGoogleLogin}>Sign in with Google</button>
-      <form onSubmit={handleEmailLogin} style={{ marginTop: 12 }}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          required
-          onChange={e => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          required
-          onChange={e => setPassword(e.target.value)}
-        />
-        <button type="submit">Sign in with Email</button>
-      </form>
-      {error && <div style={{ color: "red", marginTop: 8 }}>{error}</div>}
+      <h2>Please Sign In</h2>
+      <button onClick={handleGoogleSignIn}>Sign in with Google</button>
     </div>
   );
 };
