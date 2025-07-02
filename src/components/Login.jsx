@@ -1,5 +1,8 @@
 import React from "react";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+// import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+// Change it to this:
+import { auth } from "../firebase"; // Correct, imports the already initialized service
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const Login = () => {
   const auth = getAuth();
