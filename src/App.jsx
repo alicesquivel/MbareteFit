@@ -1,11 +1,15 @@
+// src/App.jsx
 import React, { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+// Add getRedirectResult to your imports
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+  getRedirectResult,
+} from "firebase/auth";
 
-// Import your components
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
-
-// Import main styles
 import "./index.css";
 
 export default function App() {
@@ -13,14 +17,30 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const auth = getAuth();
 
-  // Listen for authentication state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe(); // Unsubscribe on cleanup
+    // This function checks if the user is coming back from a redirect
+    getRedirectResult(auth)
+      .then((result) => {
+        // If result is not null, the user has just signed in.
+        // onAuthStateChanged will handle setting the user state.
+        if (result) {
+          console.log("Redirect sign-in successful");
+        }
+      })
+      .catch((error) => {
+        console.error("Error getting redirect result:", error);
+      })
+      .finally(() => {
+        // This listener will handle setting the user state on initial load AND after redirect.
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          setLoading(false);
+        });
+        return () => unsubscribe();
+      });
   }, [auth]);
+
+  // ... The rest of your App.jsx component remains the same ...
 
   const handleSignOut = () => {
     signOut(auth);
@@ -30,7 +50,6 @@ export default function App() {
     return <div className="text-center p-10">Loading...</div>;
   }
 
-  // If a user is logged in, show the Dashboard. Otherwise, show the Login page.
   return (
     <div className="container mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
       {user ? (

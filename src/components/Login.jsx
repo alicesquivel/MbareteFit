@@ -1,18 +1,17 @@
+// src/components/Login.jsx
 import React from "react";
-// Correctly imports the already initialized service
 import { auth } from "../firebase-config.js";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+// Import signInWithRedirect instead of signInWithPopup
+import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 
 const Login = () => {
-  // const auth = getAuth(); // THIS LINE HAS BEEN REMOVED
-
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      // This 'auth' variable now correctly refers to the one you imported
-      await signInWithPopup(auth, provider);
+      // Call signInWithRedirect
+      await signInWithRedirect(auth, provider);
     } catch (error) {
-      console.error("Error during Google sign-in:", error.message);
+      console.error("Error during sign-in:", error.message);
     }
   };
 
