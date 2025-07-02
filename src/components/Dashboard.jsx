@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { getDatabase, ref, onValue, set } from "firebase/database";
+// Import the initialized 'db' instance from your config file
+import { db } from "../firebase-config.js";
+// Import the database functions you need
+import { ref, onValue, set } from "firebase/database";
 
 // Import your new, smaller components
 import StatsPanel from "./StatsPanel";
@@ -13,19 +16,17 @@ export default function Dashboard({ user }) {
   const [height, setHeight] = useState(null);
   const [units, setUnits] = useState("kg");
 
-  // Memoized save function to avoid re-creating it on every render
   const saveData = useCallback(
     (dataToSave) => {
-      const db = getDatabase();
+      // Use the imported 'db' instance directly
       const userRef = ref(db, `users/${user.uid}`);
       set(userRef, dataToSave);
     },
     [user.uid]
   );
 
-  // Effect to load data from Firebase when the component mounts
   useEffect(() => {
-    const db = getDatabase();
+    // Use the imported 'db' instance directly
     const userRef = ref(db, `users/${user.uid}`);
     const unsubscribe = onValue(userRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -39,8 +40,9 @@ export default function Dashboard({ user }) {
     return () => unsubscribe();
   }, [user.uid]);
 
-  // Effect to save data whenever it changes
   useEffect(() => {
+    // The saveData function depends on user.uid, which is stable,
+    // so we can include it to satisfy the exhaustive-deps rule.
     saveData({ weightData, goalWeight, height, units });
   }, [weightData, goalWeight, height, units, saveData]);
 
