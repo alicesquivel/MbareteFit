@@ -1,7 +1,9 @@
 const KG_TO_LBS = 2.20462;
 
 export const convertToKg = (val, units) => (units === 'lbs' ? val / KG_TO_LBS : val);
-const convertFromKg = (val, units) => (units === 'lbs' ? val * KG_TO_LBS : val);
+
+// The 'export' keyword was missing from this line
+export const convertFromKg = (val, units) => (units === 'lbs' ? val * KG_TO_LBS : val);
 
 export const formatWeight = (val, units) =>
     typeof val === 'number' && !isNaN(val)
