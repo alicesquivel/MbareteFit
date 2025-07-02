@@ -5,24 +5,21 @@ const Login = () => {
   const auth = getAuth();
 
   const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider(); // Create a new Google Auth provider
+    const provider = new GoogleAuthProvider();
     try {
-      // Trigger the Google Sign-In popup
-      const result = await signInWithPopup(auth, provider);
-
-      // The signed-in user info can be accessed via result.user
-      const user = result.user;
-      console.log("Signed in as:", user.displayName);
+      await signInWithPopup(auth, provider);
     } catch (error) {
-      // Handle Errors here.
-      console.error("Error during sign-in:", error.message);
+      console.error("Error during Google sign-in:", error.message);
     }
   };
 
   return (
-    <div>
-      <h2>Please Sign In</h2>
-      <button onClick={handleGoogleSignIn}>Sign in with Google</button>
+    <div className="login-container">
+      <h1>Welcome to MbareteFit</h1>
+      <p>Your comprehensive tool for tracking weight, BMI, and progress.</p>
+      <button onClick={handleGoogleSignIn} className="google-signin-btn">
+        Sign in with Google
+      </button>
     </div>
   );
 };

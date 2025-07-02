@@ -8,7 +8,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler, // 1. Import Filler
+  Filler, // Import Filler
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { format } from "date-fns";
@@ -21,7 +21,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler // 2. Register Filler
+  Filler // Register Filler
 );
 
 const WeightChart = ({ weights = [] }) => {
