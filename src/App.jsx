@@ -18,28 +18,35 @@ export default function App() {
   const auth = getAuth();
 
   useEffect(() => {
-    // This is the ideal pattern for handling redirect flows.
-    // The onAuthStateChanged listener is the single source of truth for the user's state.
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      // Once we get the first response from this listener, we know the initial auth check is complete.
-      setLoading(false);
-    });
+    // This function will check for a returning user from a redirect
+    const checkRedirect = async () => {
+      try {
+        // First, wait for the redirect result to be processed
+        // This ensures the session is updated before the listener runs
+        await getRedirectResult(auth);
+      } catch (error) {
+        console.error("Error processing redirect:", error);
+      }
 
-    // Separately, process any redirect results. This doesn't need to be waited on,
-    // as onAuthStateChanged will fire with the user once the session is established.
-    getRedirectResult(auth).catch((error) => {
-      console.error("Error processing redirect result:", error);
-    });
+      // After processing the redirect, the listener will have the correct user state
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        // We can now safely say the initial loading is complete
+        setLoading(false);
+      });
 
-    // Cleanup the listener when the component unmounts
-    return () => unsubscribe();
+      // Return the cleanup function for the listener
+      return unsubscribe;
+    };
+
+    checkRedirect();
   }, [auth]);
 
   const handleSignOut = () => {
     signOut(auth);
   };
 
+  // Show a loading indicator while we check for the user
   if (loading) {
     return <div className="text-center p-10">Loading...</div>;
   }
